@@ -1,0 +1,143 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - {{ user.username }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .profile-card {
+            max-width: 600px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .profile-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div id="profile-app" class="profile-card p-6 sm:p-10">
+
+        <a href="{% url 'index' %}" class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-800 transition duration-150 mb-6">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Go back to Dashboard
+        </a>
+
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-4">User Profile Settings</h1>
+
+        {% if messages %}
+            <div class="mb-6">
+                {% for message in messages %}
+                    <div class="p-3 rounded-xl {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %} text-sm font-medium mb-2" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div id="auth-status" class="mb-6 p-3 bg-indigo-50 text-indigo-700 rounded-xl">
+            <p class="text-sm font-medium">Logged in as: <span id="auth-name" class="font-bold">{{ user.username }}</span></p>
+        </div>
+
+        <form id="profile-form" class="space-y-6" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 pb-6 border-b">
+                <div class="relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 shadow-md flex items-center justify-center">
+
+                    {% if user.userprofile.profile_pic %}
+                        {% with profile_image_url=user.userprofile.profile_pic.url %}
+                            <img id="profile-image"
+                                 src="{{ profile_image_url }}"
+                                 alt="Profile Image"
+                                 class="object-cover w-full h-full">
+                        {% endwith %}
+                    {% else %}
+                        <img id="profile-image"
+                             src="https://placehold.co/100x100/A855F7/ffffff?text=U"
+                             alt="Default Profile Image"
+                             class="object-cover w-full h-full">
+                    {% endif %}
+                    <button type="button" onclick="document.getElementById('image-upload').click()" class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 hover:opacity-100 transition duration-300 rounded-full" aria-label="Change profile image">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.865-1.73A2 2 0 0110.707 4h2.586a2 2 0 011.664.89l.865 1.73A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </button>
+                    <input type="file" id="image-upload" name="profile_pic" accept="image/*" class="hidden">
+                </div>
+
+                <div class="flex-grow w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input type="text" id="first-name" name="first_name" placeholder="First Name" value="{{ user.first_name|default:'' }}" class="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm w-full">
+                        <input type="text" id="last-name" name="last_name" placeholder="Last Name" value="{{ user.last_name|default:'' }}" class="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm w-full">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input type="email" id="email" name="email" value="{{ user.email|default:'' }}" class="p-3 border border-gray-300 rounded-lg w-full text-gray-800 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                <p class="mt-1 text-xs text-gray-500">Your email address is used for account recovery and notifications.</p>
+            </div>
+
+            <div>
+                <label for="about-me" class="block text-sm font-medium text-gray-700 mb-1">About Me:</label>
+                <textarea id="about-me" name="about_me" rows="4" placeholder="Tell us a little about yourself..." class="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm w-full resize-none">{{ user.userprofile.about_me|default:'' }}</textarea>
+            </div>
+
+            <div class="pt-4 flex justify-end">
+                <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition duration-300 shadow-lg shadow-indigo-200/50 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+
+        <p id="status-message" class="mt-4 text-sm text-center font-medium text-green-600 hidden"></p>
+    </div>
+
+    <script>
+        const profileImage = document.getElementById('profile-image');
+        const imageUpload = document.getElementById('image-upload');
+        const statusMessage = document.getElementById('status-message');
+        const form = document.getElementById('profile-form');
+
+        /**
+         * Handles local image file preview before form submission.
+         */
+        imageUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    profileImage.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        /**
+         * Clears the status message after submission.
+         */
+        if (form) {
+             form.addEventListener('submit', function(e) {
+                // Remove local status message on submit
+                statusMessage.classList.add('hidden');
+            });
+        }
+    </script>
+</body>
+</html>

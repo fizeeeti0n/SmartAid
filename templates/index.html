@@ -1,0 +1,864 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartAid Productivity Hub</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+    :root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    --card-bg: rgba(255, 255, 255, 0.85);
+    --main-bg: rgba(255, 255, 255, 0.1); /* 🔹 More transparent main container */
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 🌌 Background Animation */
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px;
+    background: var(--primary-gradient);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    color: var(--text-primary);
+    font-family: 'Poppins', sans-serif;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* 🌫️ Main Container — Fully Transparent Glass */
+.main-container {
+    background: var(--main-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    padding: 1rem;
+    width: 100%;
+    max-width: 1100px;
+    transition: background 0.3s ease;
+}
+
+/* 🧠 Inner Cards */
+.card-shadow {
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ai-assistant-bg {
+    background: black;
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+}
+
+/* 📝 Typography */
+h1 { font-size: 1.3rem !important; margin-bottom: 0.25rem !important; }
+h2 { font-size: 1.05rem !important; margin-bottom: 0.25rem !important; }
+p, label, button, input, span { font-size: 0.85rem !important; }
+
+/* 📏 Compact Layout */
+.p-6 { padding: 0.75rem !important; }
+.mb-4 { margin-bottom: 0.25rem !important; }
+.gap-6 { gap: 0.5rem !important; }
+.space-y-2 > * + * { margin-top: 0.25rem !important; }
+
+/* 💬 Smaller Components */
+#chat-window, .chat-window {
+    max-height: 130px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    line-height: 1.3;
+}
+
+#task-list-container, .task-list-container {
+    max-height: 110px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+}
+
+#mood-emoji { font-size: 1.8rem; padding: 0.25rem; }
+
+#mood-history-container, .mood-history-container {
+    max-height: 40px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+}
+
+/* 🔘 Buttons / Inputs */
+button, input {
+    padding: 4px 8px !important;
+    border-radius: 6px;
+    border: none;
+}
+
+/* 👤 Profile Menu */
+#auth-menu-container {
+    transform: scale(0.85);
+    transform-origin: top right;
+}
+
+/* 🧭 Scrollbars */
+.chat-window::-webkit-scrollbar,
+.task-list-container::-webkit-scrollbar,
+.mood-history-container::-webkit-scrollbar { width: 4px; }
+
+.chat-window::-webkit-scrollbar-thumb,
+.task-list-container::-webkit-scrollbar-thumb,
+.mood-history-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 8px;
+}
+
+.chat-window::-webkit-scrollbar-track,
+.task-list-container::-webkit-scrollbar-track,
+.mood-history-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+/* 🧩 Responsive Grid Fix */
+@media (min-width: 1024px) {
+    .grid-cols-1.lg\:grid-cols-12 {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    .lg\:col-span-5, .lg\:col-span-7 {
+        grid-column: auto !important;
+    }
+}
+</style>
+
+
+</head>
+<body class="min-h-screen flex justify-center p-4 sm:p-6">
+
+    <div class="w-full max-w-7xl p-6 bg-white rounded-[32px] card-shadow">
+        <!-- Header Section -->
+        <header class="flex justify-between items-center mb-8 p-2">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">SmartAid Hub</h1>
+                <p class="text-sm sm:text-base text-gray-500 mt-1">Productivity & Wellness Companion</p>
+            </div>
+
+            <!-- Profile/Auth Menu Container -->
+            <div id="auth-menu-container" class="relative">
+                <button id="profile-btn" class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition">
+                    <!-- User Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="auth-dropdown" class="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl bg-white ring-1 ring-black ring-opacity-5 z-20
+                                            transition ease-out duration-100 transform scale-95 opacity-0 hidden" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn" tabindex="-1">
+                    <div class="py-2" role="none">
+                        <!-- Username Display -->
+                        <!-- NOTE: Assumes 'request' context is available in Django view -->
+                        <div class="px-4 py-2 text-sm text-gray-700 border-b border-gray-100 font-semibold truncate">
+                            Hello, {{ request.user.username|default:"Guest" }}
+                        </div>
+
+                        <!-- View Profile Link -->
+                        <a href="{% url 'user_profile'|default:'#' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition" role="menuitem" tabindex="-1" id="menu-item-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            View Profile
+                        </a>
+
+                        <!-- Logout Link -->
+                        <a href="{% url 'logout'|default:'#' %}" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition border-t border-gray-100 mt-1" role="menuitem" tabindex="-1" id="menu-item-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Grid Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- 🗣️ 1. AI Assistant (Large Card, 5/12 width) -->
+            <div class="lg:col-span-5 bg-white rounded-3xl ai-assistant-bg card-shadow p-6 flex flex-col">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-700">🤖 AI Assistant</h2>
+
+                <!-- Chat Window -->
+                <div id="chat-window" class="chat-window flex-grow overflow-y-auto p-2 mb-4 bg-gray-50 rounded-xl shadow-inner">
+                    <!-- Initial AI Message -->
+                    <div class="bg-indigo-100/70 p-4 rounded-t-xl rounded-bl-xl shadow-sm max-w-[85%] mb-3 message-enter-active" data-role="ai">
+                        <p class="text-sm text-gray-800">Hello! I'm SmartAid. I can help you plan, track your mood, or brainstorm tasks. How can I assist you today?</p>
+                    </div>
+                    <!-- Dynamic messages will be appended here -->
+                </div>
+
+                <!-- Input Area -->
+                <div class="mt-auto flex items-center bg-white p-2 rounded-xl shadow-lg border border-indigo-200/50">
+                    <input type="text" id="user-input" placeholder="Ask for a study plan, task, or support..." class="flex-grow bg-transparent border-none focus:outline-none px-2 text-sm sm:text-base text-gray-700 placeholder-gray-400">
+
+                    <button id="send-btn" class="p-2 ml-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition disabled:opacity-50" aria-label="Send Message">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send-horizontal"><path d="m3 3 3 9-3 9 19-9Z"/><path d="M6 12h16"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column Grid (7/12 width) -->
+            <div class="lg:col-span-7 grid grid-cols-1 gap-6">
+
+                <!-- ✅ 3. Task Tracker -->
+                <div class="bg-white rounded-3xl card-shadow p-6">
+                    <h2 class="text-2xl font-bold mb-4 text-pink-700">📋 Task Tracker</h2>
+
+                    <!-- Task List Container -->
+                    <div id="task-list-container" class="task-list-container max-h-72 overflow-y-auto space-y-3 p-1">
+                        <!-- Tasks dynamically rendered here -->
+                        <div class="text-gray-500 text-center p-4" id="task-list-status">Loading tasks...</div>
+                    </div>
+
+                    <!-- Add Task Form -->
+                    <div class="mt-6 border-t pt-4">
+                        <h3 class="font-semibold mb-2 text-gray-700">Add New Task</h3>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="new-task-title" placeholder="Enter task description" class="flex-grow p-2 rounded-lg border border-gray-300 focus:ring-pink-500 focus:border-pink-500 text-sm">
+                            <input type="datetime-local" id="new-task-due-date" title="Set Due Date" class="p-2 rounded-lg border border-gray-300 focus:ring-pink-500 focus:border-pink-500 text-sm w-full sm:w-auto">
+                            <button id="add-task-btn" class="p-2 rounded-lg bg-pink-500 text-white font-medium hover:bg-pink-600 transition flex items-center justify-center text-sm disabled:opacity-50">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                                Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row: Mood Tracker and Quick Links -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- 💭 2. Mood Tracker -->
+                    <div class="bg-white rounded-3xl card-shadow p-6">
+                        <h2 class="text-2xl font-bold mb-4 text-yellow-700">😌 Mood Tracker</h2>
+
+                        <!-- Current Mood Display -->
+                        <div id="current-mood-display" class="flex flex-col items-center text-center">
+                            <div id="mood-emoji" class="text-6xl mb-3 p-3 bg-yellow-50 rounded-full transition-transform duration-300 transform hover:scale-105">😐</div>
+                            <p id="mood-status" class="text-xl font-semibold mb-2 text-gray-800">Log your first mood!</p>
+                            <p id="ai-mood-suggestion" class="text-sm bg-gray-50 p-2 rounded-lg text-gray-600">
+                                <span class="font-semibold">AI Suggestion:</span> The AI will provide feedback here after you log your mood.
+                            </p>
+                        </div>
+
+                        <!-- Mood Selector (Hidden until needed) -->
+                        <div id="mood-selector-container" class="mt-6 border-t pt-4">
+                            <h3 class="font-semibold mb-3 text-gray-700">How are you feeling right now?</h3>
+                            <div class="flex flex-wrap gap-3 justify-center mood-selector">
+                                <!-- Emojis/Buttons generated by JS -->
+                            </div>
+                            <button id="log-mood-btn" class="w-full mt-4 p-2 rounded-lg bg-yellow-500 text-white font-medium hover:bg-yellow-600 transition disabled:opacity-50">Log Mood</button>
+                        </div>
+
+                        <!-- Mood History (Minimal view) -->
+                        <div class="mt-6 border-t pt-4">
+                            <h3 class="font-semibold mb-2 text-gray-700">Recent Moods</h3>
+                            <div id="mood-history-container" class="mood-history-container max-h-24 overflow-y-auto space-y-2 text-sm">
+                                <div class="text-gray-500 text-center" id="mood-history-status">No mood history yet.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Links (Retained from original) -->
+                    <div class="bg-white rounded-3xl card-shadow p-6 flex flex-col space-y-3">
+                        <h2 class="text-2xl font-bold mb-4 text-teal-700">🔗 Quick Links</h2>
+
+                        <a href="{% url 'pc:peer_connect' %}" class="flex items-center p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition">
+                            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 mr-3 text-lg">🧭</span>
+                            Peer Connect
+                        </a>
+
+                        <a href="{% url 'st:study_tools' %}" class="flex items-center p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition">
+                            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-purple-100 text-purple-600 mr-3 text-lg">📖</span>
+                            Study Tools
+                        </a>
+                        <a href="{% url 'resource_library' %}" class="flex items-center p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition">
+                            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-green-100 text-green-600 mr-3 text-lg">📁</span>
+                            Resource Library
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2">
+    <!-- Toast notifications appear here -->
+</div>
+<div id="modal-container">
+    <!-- Modal for task editing/deletion -->
+</div>
+
+
+<script>
+    // --- Django Template Variable for CSRF Token ---
+    const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 'dummy-csrf-token';
+
+    // --- Utility Functions ---
+    /** Helper for making authenticated AJAX/Fetch requests. */
+    async function apiFetch(url, method = 'GET', data = null) {
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF_TOKEN,
+        };
+
+        const config = {
+            method: method,
+            headers: headers,
+            body: data ? JSON.stringify(data) : null,
+        };
+
+        try {
+            const response = await fetch(url, config);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ message: 'Network response error' }));
+                throw new Error(errorData.error || 'API Request Failed');
+            }
+            if (response.status === 204) return {}; // Handle No Content
+            return response.json();
+        } catch (error) {
+            console.error(`Fetch error on ${url}:`, error.message);
+            showToast(`Error: ${error.message}`, 'error');
+            throw error;
+        }
+    }
+
+    /** Display dynamic toast notifications */
+    function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toast-container');
+        const colorMap = {
+            'success': 'bg-green-500',
+            'error': 'bg-red-500',
+            'info': 'bg-indigo-500',
+            'warning': 'bg-yellow-500'
+        };
+        const toast = document.createElement('div');
+        toast.className = `p-4 text-white rounded-xl shadow-lg transition-opacity duration-300 ease-in-out transform translate-y-0 opacity-100 ${colorMap[type] || colorMap['info']}`;
+        toast.textContent = message;
+
+        toastContainer.appendChild(toast);
+
+        // Auto-hide after 4 seconds
+        setTimeout(() => {
+            toast.classList.remove('opacity-100', 'translate-y-0');
+            toast.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => toast.remove(), 300); // Remove after fade out
+        }, 4000);
+    }
+
+    // --- Dropdown Logic ---
+    function setupDropdown(buttonId, dropdownId) {
+        const btn = document.getElementById(buttonId);
+        const dropdown = document.getElementById(dropdownId);
+
+        if (btn && dropdown) {
+            const toggle = (show = null) => {
+                const isVisible = dropdown.classList.contains('opacity-100');
+                // If show is null, toggle the current state
+                show = (show === null) ? !isVisible : show;
+
+                if (!show) {
+                    // Hide state (start transition)
+                    dropdown.classList.remove('scale-100', 'opacity-100');
+                    dropdown.classList.add('scale-95', 'opacity-0');
+
+                    // Add 'hidden' after transition completes (100ms)
+                    setTimeout(() => {
+                        dropdown.classList.add('hidden');
+                    }, 100);
+
+                } else {
+                    // Show state
+                    // Remove 'hidden' immediately
+                    dropdown.classList.remove('hidden');
+                    // Force browser reflow for CSS transition to work
+                    void dropdown.offsetWidth;
+                    // Start transition
+                    dropdown.classList.remove('scale-95', 'opacity-0');
+                    dropdown.classList.add('scale-100', 'opacity-100');
+                }
+            };
+
+            // Toggle dropdown on button click
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent document click listener from immediately closing it
+                toggle();
+            });
+
+            // Close dropdown when clicking anywhere outside of it
+            window.addEventListener('click', (e) => {
+                // Check if the dropdown is visible, and the click target is neither the dropdown nor the button
+                if (dropdown.classList.contains('opacity-100') && !dropdown.contains(e.target) && e.target !== btn) {
+                    toggle(false); // Hide the dropdown
+                }
+            });
+        }
+    }
+
+
+    // --- 🗣️ 1. AI Assistant Logic ---
+    const chatWindow = document.getElementById('chat-window');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    // Placeholder URL to avoid NoReverseMatch
+    const AI_URL = "/api/ai/plan/";
+
+    /** Scrolls the chat window to the latest message. */
+    function scrollToBottom() {
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    /** Creates and appends a message bubble to the chat window. */
+    function addMessage(text, role, isAnimated = true) {
+        const bubble = document.createElement('div');
+        const roleClass = role === 'user'
+            ? 'bg-indigo-500 text-white rounded-t-xl rounded-br-xl ml-auto'
+            : 'bg-gray-200 text-gray-800 rounded-t-xl rounded-bl-xl mr-auto';
+
+        bubble.className = `p-4 shadow-md max-w-[85%] mb-3 ${roleClass} ${isAnimated ? 'message-enter' : ''}`;
+        bubble.setAttribute('data-role', role);
+        bubble.innerHTML = `<p class="text-sm">${text}</p>`;
+
+        chatWindow.appendChild(bubble);
+
+        if (isAnimated) {
+            // Use requestAnimationFrame for a smoother transition trigger
+            requestAnimationFrame(() => {
+                bubble.classList.remove('message-enter');
+                bubble.classList.add('message-enter-active');
+            });
+        }
+        scrollToBottom();
+    }
+
+    /** Handles the AI chat submission. */
+    async function handleChat() {
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        // 1. Display user message
+        addMessage(message, 'user');
+        userInput.value = '';
+        sendBtn.disabled = true;
+
+        // 2. Display a loading message from AI
+        addMessage("...", 'ai', false);
+        const loadingBubble = chatWindow.lastChild;
+
+        try {
+            // 3. Send message to Django API
+            const response = await apiFetch(AI_URL, 'POST', { message: message });
+
+            // 4. Update the loading message with the final AI response
+            loadingBubble.innerHTML = `<p class="text-sm">${response.response}</p>`;
+            loadingBubble.classList.remove('bg-gray-200');
+            loadingBubble.classList.add('bg-indigo-100/70'); // Match initial AI style
+
+        } catch (error) {
+            loadingBubble.innerHTML = `<p class="text-sm text-red-600">Error: Could not connect to AI.</p>`;
+        } finally {
+            sendBtn.disabled = false;
+            scrollToBottom();
+        }
+    }
+
+    sendBtn.addEventListener('click', handleChat);
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleChat();
+    });
+
+    // --- ✅ 3. Task Tracker Logic ---
+    const taskListContainer = document.getElementById('task-list-container');
+    const taskStatus = document.getElementById('task-list-status');
+    const addTaskBtn = document.getElementById('add-task-btn');
+    const newTaskTitleInput = document.getElementById('new-task-title');
+    const newTaskDateInput = document.getElementById('new-task-due-date');
+
+
+    const TASK_URLS = {
+        add: "/api/tasks/add/",
+        update: (id) => `/api/tasks/${id}/update/`,
+        delete: (id) => `/api/tasks/${id}/delete/`,
+    };
+
+
+    /** Renders a single task element. */
+    function renderTask(task) {
+        const taskEl = document.createElement('div');
+        taskEl.id = `task-${task.id}`;
+        taskEl.className = 'task-item flex items-center p-3 bg-white rounded-xl hover:bg-gray-50 transition border border-gray-100';
+        taskEl.setAttribute('data-task-id', task.id);
+
+        // Determine status color and text
+        let statusColor = 'blue-500';
+        let dueText = '';
+        if (task.is_completed) {
+            statusColor = 'green-500';
+        } else if (task.due_date) {
+            const dueDate = new Date(task.due_date);
+            const now = new Date();
+            if (dueDate < now) {
+                statusColor = 'red-500';
+                dueText = `<span class="text-xs font-semibold px-2 py-0.5 rounded-full text-red-700 bg-red-100 ml-2">OVERDUE</span>`;
+            } else {
+                dueText = `<span class="text-xs font-medium text-gray-500 ml-2">${dueDate.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>`;
+            }
+        } else {
+            // Default ongoing task color
+            statusColor = 'indigo-500';
+        }
+
+        taskEl.innerHTML = `
+            <input type="checkbox" id="check-${task.id}" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 transition cursor-pointer" ${task.is_completed ? 'checked' : ''}>
+            <label for="check-${task.id}" class="flex-grow ml-3 text-sm font-medium ${task.is_completed ? 'line-through text-gray-500' : 'text-gray-900'}">
+                ${task.title}
+            </label>
+            ${dueText}
+            <button class="delete-task-btn p-1 ml-4 text-gray-400 hover:text-red-500 transition" data-id="${task.id}" aria-label="Delete Task">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+            </button>
+        `;
+
+        // Add event listeners dynamically
+        const checkbox = taskEl.querySelector(`#check-${task.id}`);
+        checkbox.addEventListener('change', () => updateTaskCompletion(task.id, checkbox.checked));
+
+        const deleteButton = taskEl.querySelector('.delete-task-btn');
+        deleteButton.addEventListener('click', () => deleteTask(task.id));
+
+        return taskEl;
+    }
+
+    /** Updates the Task List UI based on the fetched data. */
+    function updateTaskList(tasks) {
+        taskListContainer.innerHTML = '';
+        if (tasks.length === 0) {
+            taskListContainer.innerHTML = '<div class="text-gray-500 text-center p-4">You have no tasks! Time to relax or add something new.</div>';
+            return;
+        }
+
+        // Sort: Incomplete, then Completed (Client-side sort to avoid complex Firestore orderBy/index issues)
+        tasks.sort((a, b) => (a.is_completed === b.is_completed) ? 0 : a.is_completed ? 1 : -1);
+
+        tasks.forEach(task => {
+            taskListContainer.appendChild(renderTask(task));
+        });
+    }
+
+    /** Fetches initial task data from the server (using context passed from Django view). */
+    function loadInitialTasks() {
+        // NOTE: This relies on the Django view passing 'tasks' as a JSON-safe string.
+        try {
+            const tasksJson = '{{ tasks|safe }}';
+            // Check if the placeholder string is still present
+            if (tasksJson.includes('tasks|safe')) {
+                updateTaskList([]); // Show empty list if context is not yet configured
+                return;
+            }
+            const initialTasks = JSON.parse(tasksJson);
+            updateTaskList(initialTasks);
+
+            // Check for any overdue tasks to trigger a notification
+            initialTasks.forEach(task => {
+                if (!task.is_completed && task.due_date) {
+                    const dueDate = new Date(task.due_date);
+                    const now = new Date();
+                    // Simple check for past due date
+                    if (dueDate < now) {
+                         // Check if a browser notification is possible/allowed
+                         if (Notification.permission === "granted") {
+                             new Notification('Task Overdue!', {
+                                 body: `Your task "${task.title}" was due on ${dueDate.toLocaleDateString()}.`,
+                                 icon: 'https://placehold.co/48x48/ff0000/ffffff?text=!'
+                             });
+                         }
+                        showToast(`⚠️ Task Overdue: ${task.title}`, 'warning');
+                    }
+                }
+            });
+        } catch (e) {
+            console.warn("Could not parse initial tasks data. Ensure 'tasks' context is passed correctly:", e);
+            taskListContainer.innerHTML = '<div class="text-gray-500 text-center p-4">Error loading tasks. Check Django context.</div>';
+        }
+    }
+
+    /** Handles adding a new task via API. */
+    async function handleAddTask() {
+        const title = newTaskTitleInput.value.trim();
+        const dueDate = newTaskDateInput.value;
+        if (!title) {
+            showToast('Task title cannot be empty!', 'error');
+            return;
+        }
+
+        addTaskBtn.disabled = true;
+
+        try {
+            await apiFetch(TASK_URLS.add, 'POST', { title: title, due_date: dueDate });
+            showToast('Task added successfully!', 'success');
+
+            // Clear inputs
+            newTaskTitleInput.value = '';
+            newTaskDateInput.value = '';
+
+            // Reload all tasks (safer approach for sorting/state consistency)
+            loadInitialTasks();
+
+        } catch (error) {
+            console.error(error);
+            showToast('Failed to add task.', 'error');
+        } finally {
+            addTaskBtn.disabled = false;
+        }
+    }
+
+    /** Handles updating the completion status of a task. */
+    async function updateTaskCompletion(taskId, isCompleted) {
+        try {
+            await apiFetch(TASK_URLS.update(taskId), 'POST', { is_completed: isCompleted });
+            showToast(`Task marked as ${isCompleted ? 'complete' : 'incomplete'}!`, 'info');
+
+            // Re-render the list for visual update (line-through/sorting)
+            loadInitialTasks();
+
+        } catch (error) {
+            console.error(error);
+            showToast('Failed to update task status.', 'error');
+            // Revert checkbox state if update failed
+            document.getElementById(`check-${taskId}`).checked = !isCompleted;
+        }
+    }
+
+    /** Handles deleting a task. */
+    async function deleteTask(taskId) {
+        // IMPORTANT: Replace confirm() with a custom modal in a production environment
+        if (!window.confirm('Are you sure you want to delete this task?')) {
+            return;
+        }
+
+        try {
+            await apiFetch(TASK_URLS.delete(taskId), 'DELETE');
+            showToast('Task deleted!', 'success');
+
+            // Remove the element from the DOM
+            document.getElementById(`task-${taskId}`).remove();
+
+            // If the list is empty, display the status message
+            if (taskListContainer.children.length === 0) {
+                 taskListContainer.innerHTML = '<div class="text-gray-500 text-center p-4">You have no tasks! Time to relax or add something new.</div>';
+            }
+
+        } catch (error) {
+            console.error(error);
+            showToast('Failed to delete task.', 'error');
+        }
+    }
+
+    // Attach event listener for adding tasks
+    addTaskBtn.addEventListener('click', handleAddTask);
+    newTaskTitleInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleAddTask();
+    });
+
+
+    // --- 💭 2. Mood Tracker Logic ---
+    const moodSelectorContainer = document.querySelector('.mood-selector');
+    const logMoodBtn = document.getElementById('log-mood-btn');
+    const moodEmojiDisplay = document.getElementById('mood-emoji');
+    const moodStatus = document.getElementById('mood-status');
+    const aiMoodSuggestion = document.getElementById('ai-mood-suggestion');
+    const moodHistoryContainer = document.getElementById('mood-history-container');
+    const moodHistoryStatus = document.getElementById('mood-history-status');
+
+    let selectedMoodCode = null;
+
+    const MOOD_CHOICES = [
+        { code: 'joy', display: 'Joyful', emoji: '😊', color: 'yellow-500' },
+        { code: 'calm', display: 'Calm', emoji: '😌', color: 'green-500' },
+        { code: 'neutral', display: 'Neutral', emoji: '😐', color: 'blue-300' },
+        { code: 'tired', display: 'Tired', emoji: '😴', color: 'gray-500' },
+        { code: 'stressed', display: 'Stressed', emoji: '😥', color: 'red-500' },
+        { code: 'sad', display: 'Sad', emoji: '😞', color: 'indigo-500' },
+    ];
+
+
+    const MOOD_URLS = {
+        save: "/api/mood/save/",
+        data: "/api/mood/data/"
+    };
+
+
+    /** Initializes the mood selection buttons. */
+    function setupMoodSelector() {
+        moodSelectorContainer.innerHTML = '';
+        MOOD_CHOICES.forEach(mood => {
+            const button = document.createElement('button');
+            button.className = `p-3 rounded-xl hover:bg-gray-100 transition text-2xl border-2 border-transparent`;
+            button.setAttribute('data-mood-code', mood.code);
+            button.title = mood.display;
+            button.textContent = mood.emoji;
+
+            button.addEventListener('click', () => {
+                selectMood(mood.code);
+            });
+            moodSelectorContainer.appendChild(button);
+        });
+    }
+
+    /** Handles the visual selection of a mood. */
+    function selectMood(code) {
+        selectedMoodCode = code;
+        moodSelectorContainer.querySelectorAll('button').forEach(btn => {
+            if (btn.getAttribute('data-mood-code') === code) {
+                btn.classList.add('bg-indigo-50', 'border-indigo-500');
+                btn.classList.remove('hover:bg-gray-100');
+            } else {
+                btn.classList.remove('bg-indigo-50', 'border-indigo-500');
+                btn.classList.add('hover:bg-gray-100');
+            }
+        });
+        logMoodBtn.disabled = false;
+    }
+
+    /** Renders the latest mood data to the main display and history. */
+    function renderMoodData(data) {
+        // 1. Update Main Display
+        const latest = data.latest_mood;
+        if (latest) {
+            const mood = MOOD_CHOICES.find(m => m.code === latest.mood_code) || { emoji: '?', display: 'Unknown', color: 'gray-500' };
+            moodEmojiDisplay.textContent = mood.emoji;
+            moodEmojiDisplay.className = `text-6xl mb-3 p-3 rounded-full transition-transform duration-300 transform hover:scale-105 bg-${mood.color.replace('-500', '-50')}`;
+            moodStatus.textContent = `Current Mood: ${mood.display}`;
+        } else {
+             moodEmojiDisplay.textContent = '😐';
+             moodEmojiDisplay.className = `text-6xl mb-3 p-3 rounded-full transition-transform duration-300 transform hover:scale-105 bg-gray-50`;
+             moodStatus.textContent = `Log your first mood!`;
+        }
+
+        // 2. Update AI Suggestion
+        aiMoodSuggestion.innerHTML = `<span class="font-semibold">AI Suggestion:</span> ${data.ai_suggestion || 'The AI will provide feedback here after you log your mood.'}`;
+
+        // 3. Update History
+        moodHistoryContainer.innerHTML = '';
+        if (!data.history || data.history.length === 0) {
+            moodHistoryContainer.innerHTML = moodHistoryStatus.outerHTML;
+        } else {
+            data.history.forEach(entry => {
+                const mood = MOOD_CHOICES.find(m => m.code === entry.mood_code);
+                const color = mood ? mood.color : 'gray-500';
+                const historyItem = document.createElement('div');
+                // Use a generic placeholder color if specific color mapping is missed
+                const baseColor = color.split('-')[0];
+                historyItem.className = `flex items-center justify-between p-2 rounded-lg bg-gray-50 border-l-4 border-l-${baseColor}-500`;
+                historyItem.innerHTML = `
+                    <span class="font-medium text-gray-700">${entry.mood_display}</span>
+                    <span class="text-xs text-gray-500">${entry.logged_at}</span>
+                `;
+                moodHistoryContainer.appendChild(historyItem);
+            });
+        }
+    }
+
+    /** Fetches and displays the latest mood data. */
+    async function loadMoodData() {
+        try {
+            // Using dummy data structure for now since API calls will fail without Django endpoints
+            const dummyData = {
+                latest_mood: null,
+                ai_suggestion: 'Connect your Django API to get personalized AI feedback here.',
+                history: [
+                    { mood_code: 'calm', mood_display: 'Calm', logged_at: '2 hours ago' },
+                    { mood_code: 'joy', mood_display: 'Joyful', logged_at: 'Yesterday' }
+                ]
+            };
+            // In a real app, you would fetch:
+            // const data = await apiFetch(MOOD_URLS.data);
+            renderMoodData(dummyData);
+        } catch (error) {
+            console.error('Failed to load mood data:', error);
+            showToast('Failed to load mood history.', 'error');
+        }
+    }
+
+    /** Handles saving a mood entry. */
+    async function handleLogMood() {
+        if (!selectedMoodCode) {
+            showToast('Please select a mood before logging.', 'error');
+            return;
+        }
+
+        logMoodBtn.disabled = true;
+
+        try {
+            // Placeholder API call (this will likely fail without Django setup)
+            // await apiFetch(MOOD_URLS.save, 'POST', { mood: selectedMoodCode, notes: '' });
+
+            const selectedMood = MOOD_CHOICES.find(m => m.code === selectedMoodCode)?.display || 'Mood';
+            showToast(`Mood logged: ${selectedMood}!`, 'success');
+
+            // Simulate history update
+            loadMoodData();
+
+            // Reset selector
+            selectedMoodCode = null;
+            setupMoodSelector();
+            logMoodBtn.disabled = true;
+
+        } catch (error) {
+            console.error(error);
+            showToast('Failed to log mood (API check needed).', 'error');
+        } finally {
+            logMoodBtn.disabled = false;
+        }
+    }
+
+    logMoodBtn.addEventListener('click', handleLogMood);
+
+    // --- Initial Setup and Permissions ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Setup Profile Dropdown
+        setupDropdown('profile-btn', 'auth-dropdown');
+
+        // Load Task data from Django context
+        loadInitialTasks();
+
+        // Setup Mood Tracker
+        setupMoodSelector();
+        loadMoodData();
+        logMoodBtn.disabled = true; // Disabled until a mood is selected
+
+        // Request Notification Permission for due tasks
+        if ('Notification' in window) {
+            if (Notification.permission !== "granted") {
+                 Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                         showToast('Notifications enabled for task alerts!', 'success');
+                    } else {
+                         console.warn("Notification permission denied.");
+                    }
+                });
+            }
+        }
+    });
+
+</script>
+
+</body>
+</html>

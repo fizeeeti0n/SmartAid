@@ -1,0 +1,83 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | SmartAid</title>
+
+    <!-- Tailwind CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        :root {
+            --light-blue: #e8f0ff;
+            --accent-blue: #4f46e5;
+        }
+
+        body {
+            /* Applying styles from Peer Connect for centering and background */
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light-blue);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .card-shadow {
+            /* Reusing the elegant shadow effect */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+    </style>
+
+</head>
+<body>
+
+    <!-- Main card container, centered and styled for authentication forms -->
+    <div class="w-full max-w-sm p-8 bg-white rounded-[32px] card-shadow">
+
+        <h2 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">
+            Create SmartAid Account
+        </h2>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+
+            <!-- Standard form inputs with modern Tailwind styling -->
+            <input
+                type="text"
+                name="username"
+                placeholder="Choose a Username"
+                required
+                class="w-full p-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+            >
+            <input
+                type="password"
+                name="password"
+                placeholder="Set a Password"
+                required
+                class="w-full p-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+            >
+
+            <!-- Submit button matching the application's primary accent color -->
+            <button
+                type="submit"
+                class="w-full bg-indigo-600 text-white font-semibold py-3 mt-4 rounded-xl hover:bg-indigo-700 transition duration-150 shadow-md hover:shadow-lg"
+            >
+                Sign Up 🚀
+            </button>
+        </form>
+
+        <!-- Login link for existing users -->
+        <p class="text-center text-gray-500 mt-6 text-sm">
+            Already have an account?
+            <a href="{% url 'login' %}" class="text-indigo-600 font-medium hover:text-indigo-800 transition duration-150">
+                Login here
+            </a>
+        </p>
+    </div>
+</body>
+</html>
