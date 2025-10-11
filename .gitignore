@@ -1,0 +1,15 @@
+# Virtual Environment
+.venv/
+env/
+
+# Python / Build
+*.pyc
+__pycache__/
+
+# Django & Database
+db.sqlite3
+/media/
+/static/CACHE/
+
+# Secrets (API Keys)
+.env
