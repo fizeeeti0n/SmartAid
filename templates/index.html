@@ -1,0 +1,1012 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SmartAid</title>
+    <link rel="icon" href="{% static 'photo/fav.png' %}" type="image/png" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root{
+      --bg-900: #071028;
+      --bg-800: #0b1530;
+      --card-900: rgba(255,255,255,0.03);
+      --glass-700: rgba(255,255,255,0.03);
+      --accent: #6366f1;
+      --muted: rgba(230,238,248,0.65);
+    }
+
+    /* === START OF MODIFICATIONS === */
+    /* Define header height for padding adjustment */
+    :root {
+        --header-height: 80px; /* Estimated height of the header + padding */
+        --content-padding: 24px; /* Maintain padding on sides for cards */
+    }
+
+    html,body { height: 100%; overflow: hidden; } /* Ensure full viewport height and no body scroll */
+    body {
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      /* Background fills the entire viewport */
+      background: linear-gradient(180deg, #031029 0%, #06132a 45%, #041024 100%);
+      color: #e6eef8;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      margin: 0;
+      padding: 0; /* Remove body padding */
+      box-sizing: border-box;
+      overflow-y: auto; /* Allow scrolling on the body */
+    }
+
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50; /* Above other content */
+      padding: 16px var(--content-padding); /* Padding to match old .app-shell structure */
+      background: rgba(3, 16, 41, 0.95); /* Semi-transparent background for fixed header */
+
+    }
+    header .title { text-align: center; }
+    header .title h1 { font-weight: 800; font-size: 1.9rem; margin: 0; color: #ffffff; }
+    header .title p { margin: 4px 0 0; color: var(--muted); font-size: 0.95rem; }
+
+    /* profile button (top-right) - now relative to the fixed header */
+    .profile-wrap { position: absolute; right: var(--content-padding); top: 50%; transform: translateY(-50%); }
+
+    /* Main content area adjustment */
+    .content-area {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      align-items: start;
+      /* Push content below the fixed header */
+      padding: var(--content-padding);
+      padding-top: calc(var(--header-height) + 18px); /* Account for header + gap */
+      height: auto; /* Let it grow with content */
+    }
+
+    @media(min-width: 1024px) {
+      .content-area { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* Card styles remain, ensuring they float on the background */
+    .card {
+      border-radius: 16px;
+      padding: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015));
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: 0 8px 26px rgba(2,6,23,0.55);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Rest of the original CSS remains (only adding the relevant parts for context, the actual change is in the top section) */
+
+    .card h2 { margin: 0; font-size: 1.05rem; color: #fff; font-weight: 700; }
+    .card .muted { color: var(--muted); font-size: .92rem; }
+
+    /* chat area scroll and input */
+    #chat-window {
+      background: rgba(10,14,24,0.45);
+      border-radius: 12px;
+      padding: 12px;
+      overflow-y: auto;
+      flex: 1 1 auto;
+      min-height: 220px;
+      max-height: 520px;
+    }
+
+    .msg-ai { background: rgba(255,255,255,0.03); color: #dbeafe; padding: 12px 14px; border-radius: 14px; max-width: 86%; margin-bottom: 10px; }
+    .msg-user { background: linear-gradient(90deg, #4f46e5, #7c3aed); color: white; padding: 12px 14px; border-radius: 14px; max-width: 86%; margin-bottom: 10px; margin-left: auto; }
+
+    .chat-input {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .chat-input input[type="text"] {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #e6eef8;
+      flex: 1;
+    }
+
+    /* mood tracker visuals */
+    .mood-visual {
+      background: linear-gradient(180deg, rgba(99,102,241,0.12), rgba(99,102,241,0.04));
+      border-radius: 12px;
+      padding: 16px;
+      display:flex;
+      flex-direction: column;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height: 120px;
+    }
+
+    .mood-emoji {
+      width: 72px;
+      height: 72px;
+      border-radius: 999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 32px;
+      background: rgba(255,255,255,0.03);
+      box-shadow: 0 6px 18px rgba(2,6,23,0.5);
+    }
+
+    .mood-buttons { display:flex; gap:8px; justify-content:space-between; margin-top:8px; }
+
+    .mood-buttons button {
+      flex:1;
+      padding:10px;
+      border-radius:10px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.03);
+      font-size: 20px;
+    }
+
+    /* right column split (task tracker top, quick links bottom) */
+    .right-split { display:flex; flex-direction:column; gap:18px; height:100%; }
+    .right-split .top { flex:1 1 60%; display:flex; flex-direction:column; }
+    .right-split .bottom { flex:1 1 40%; display:flex; flex-direction:column; }
+
+    /* task list styles */
+    #task-list-container {
+      overflow-y:auto;
+      max-height: 44vh;
+      padding-right: 6px;
+    }
+
+    .task-item {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px;
+      border-radius:12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.03);
+      margin-bottom:8px;
+    }
+
+    .task-item label { color:#000000; font-weight:600; font-size:0.95rem; }
+
+    .quick-link {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px;
+      border-radius:12px;
+      background: rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.03);
+      transition: transform .15s ease, background .15s ease;
+    }
+    .quick-link:hover { transform: translateY(-4px); background: rgba(255,255,255,0.03); }
+
+    /* small utility */
+    .muted-xs { color: var(--muted); font-size: .82rem; }
+
+    /* scrollbars */
+    .scrollbar-thin::-webkit-scrollbar { height: 8px; width: 8px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 8px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+
+    /* responsiveness tweaks */
+    @media (max-width: 1024px) {
+
+      .content-area { height: auto; grid-template-columns: 1fr; }
+
+      header { padding: 10px var(--content-padding); }
+      :root { --header-height: 64px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell relative" role="main" aria-labelledby="appTitle">
+
+    <!-- Header -->
+    <header class="relative" style="padding-top:8px;">
+      <div class="title">
+        <h1 id="appTitle">SmartAid</h1>
+        <p class="muted">Your Integrated Well-being Hub</p>
+      </div>
+
+     <!-- Profile Button top-right -->
+<div class="profile-wrap">
+  <div id="auth-menu-container" class="relative">
+    <button id="profile-btn" class="w-12 h-12 rounded-full overflow-hidden ring-1 ring-white/6 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gradient-to-br from-slate-800 to-slate-700 flex items-center justify-center shadow-sm">
+
+      {% if request.user.is_authenticated and request.user.userprofile.profile_pic %}
+        <!-- User profile picture -->
+        <img src="{{ request.user.userprofile.profile_pic.url }}" alt="Avatar" class="w-full h-full object-cover">
+      {% else %}
+        <!-- fallback SVG avatar -->
+        <svg viewBox="0 0 24 24" class="w-7 h-7 text-white/90" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+          <circle cx="12" cy="8" r="3" />
+        </svg>
+      {% endif %}
+
+    </button>
+
+    <!-- Dropdown retained -->
+    <div id="auth-dropdown" class="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl bg-white ring-1 ring-black ring-opacity-5 z-20
+                                      transition ease-out duration-100 transform scale-95 opacity-0 hidden" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn" tabindex="-1">
+      <div class="py-2" role="none">
+          <!-- Username Display -->
+          <div class="px-4 py-2 text-sm text-gray-700 border-b border-gray-100 font-semibold truncate">
+              Hello, {{ request.user.username|default:"Guest" }}
+          </div>
+
+          <!-- View Profile Link -->
+          <a href="{% url 'user_profile' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition" role="menuitem">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+              View Profile
+          </a>
+
+          <!-- Logout Link -->
+          <a href="{% url 'logout' %}" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition border-t border-gray-100 mt-1" role="menuitem">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>
+              </svg>
+              Logout
+          </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+    </header>
+
+    <!-- Main content: three columns -->
+    <section class="content-area scrollbar-thin" aria-label="Main dashboard content">
+      <!-- Column 1: AI Chat Assistant -->
+      <aside class="card" aria-labelledby="chatHeading">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 id="chatHeading">AI Chat Assistant</h2>
+            <div class="muted-xs">Get planning help, quick answers, or emotional support</div>
+          </div>
+
+        </div>
+
+        <!-- Chat window (script expects id="chat-window") -->
+        <div id="chat-window" class="scrollbar-thin">
+          <div class="msg-ai">
+            <div class="text-sm">Hello — I'm Smart Aid. Tell me what you need: study plan, task prioritization, or a quick mood check.</div>
+            <div class="muted-xs mt-2">Tip: try "create a 2-hour study plan for algorithms".</div>
+          </div>
+        </div>
+
+        <!-- input area (script expects id="user-input" and id="send-btn") -->
+        <div class="chat-input">
+          <input id="user-input" type="text" placeholder="Ask Smart Aid..." class="bg-transparent border border-white/6 rounded-xl px-4 py-2 text-sm placeholder:muted focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <button id="send-btn" class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-medium shadow">
+            <!-- send icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/></svg>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Column 2: Mood Tracker -->
+      <section class="card" aria-labelledby="moodHeading">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 id="moodHeading">Daily Mood Check</h2>
+            <div class="muted-xs">Quick log & AI suggestions</div>
+          </div>
+          <div class="muted-xs" id="todayDate">--</div>
+        </div>
+
+        <div class="mood-visual">
+          <div id="mood-emoji" class="mood-emoji">😐</div>
+          <div id="mood-status" class="text-white font-semibold">No mood logged</div>
+          <div id="ai-mood-suggestion" class="muted-xs">Log a mood for quick AI tips</div>
+        </div>
+
+        <div class="mt-4">
+          <div class="muted-xs mb-2">How are you feeling right now?</div>
+          <!-- mood selector container (script expects .mood-selector element) -->
+          <div class="mood-buttons mood-selector" aria-hidden="false">
+            <!-- buttons generated by JS -->
+          </div>
+
+          <div class="mt-3 flex gap-3">
+            <button id="log-mood-btn" class="flex-1 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-black font-medium shadow">Log Mood</button>
+            <button id="clearMoodBtn" class="py-2 px-3 rounded-xl bg-slate-700/40 hover:bg-slate-700/50 text-sm muted-xs">Clear</button>
+          </div>
+        </div>
+
+        <div class="mt-4 border-t border-white/6 pt-3">
+          <div class="flex items-center justify-between mb-2">
+            <div class="muted-xs">Recent moods</div>
+            <div class="muted-xs" id="moodCount">0</div>
+          </div>
+          <div id="mood-history-container" class="mood-history-container scrollbar-thin max-h-36 overflow-y-auto space-y-2">
+            <div id="mood-history-status" class="muted-xs text-sm">No mood history yet.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Column 3: Task Tracker & Quick Links (right-split) -->
+      <aside class="right-split">
+        <!-- Top: Task Tracker -->
+        <div class="top card">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h2>Task Tracker</h2>
+              <div class="muted-xs">Manage today's tasks</div>
+            </div>
+            <div id="tasksSummary" class="muted-xs">0 tasks</div>
+          </div>
+
+          <div id="task-list-container" class="scrollbar-thin">
+            <div id="task-list-status" class="muted-xs text-sm">No tasks — add one below.</div>
+          </div>
+
+          <div class="pt-3 border-t border-white/6 mt-3">
+            <div class="flex gap-2">
+              <input id="new-task-title" class="flex-1 rounded-xl px-3 py-2 bg-transparent border border-white/6 text-sm placeholder:muted focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="New task (e.g., Finish lab report)" />
+              <input id="new-task-due-date" type="datetime-local" class="rounded-xl px-3 py-2 bg-transparent border border-white/6 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <button id="add-task-btn" class="px-4 py-2 rounded-xl bg-pink-500 hover:bg-pink-600 text-white font-medium">Add</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom: Quick Links -->
+        <div class="bottom card">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h2>Quick Links</h2>
+              <div class="muted-xs">Shortcuts to key areas</div>
+            </div>
+            <div class="muted-xs">•</div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <a href="{% url 'pc:peer_connect' %}" class="quick-link">
+              <div class="w-10 h-10 rounded-lg bg-indigo-600/20 flex items-center justify-center text-lg">🧭</div>
+              <div>
+                <div class="text-sm text-white">Peer Connect</div>
+                <div class="muted-xs">Community</div>
+              </div>
+            </a>
+
+            <a href="{% url 'st:study_tools' %}" class="quick-link">
+              <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center text-lg">📖</div>
+              <div>
+                <div class="text-sm text-white">Study Tools</div>
+                <div class="muted-xs">Flashcards, PDFs</div>
+              </div>
+            </a>
+
+            <a href="{% url 'resource_library' %}" class="quick-link">
+              <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center text-lg">📁</div>
+              <div>
+                <div class="text-sm text-white">Resource Library</div>
+                <div class="muted-xs">Docs & links</div>
+              </div>
+            </a>
+
+
+          </div>
+
+
+        </div>
+      </aside>
+    </section>
+
+    <!-- small footer note -->
+
+  </main>
+
+  <!-- Keep the existing toast and modal containers expected by your scripts -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+  <div id="modal-container"></div>
+
+<!-- ========= PRESERVED SCRIPTS FROM ORIGINAL FILE (UNCHANGED) ========= -->
+<script>
+    // --- Django Template Variable for CSRF Token ---
+    const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 'dummy-csrf-token';
+
+    // --- Utility Functions ---
+
+    /** Fallback: Get CSRF token from cookie if not available via template tag. */
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    // Use the cookie if the template variable is missing
+    const FINAL_CSRF_TOKEN = CSRF_TOKEN === 'dummy-csrf-token' ? getCookie('csrftoken') : CSRF_TOKEN;
+
+
+    async function apiFetch(url, method = 'GET', data = null) {
+        const headers = {
+            'Content-Type': 'application/json',
+            // CRITICAL FIX: Ensure the CSRF Token is included in headers for POST/PUT/DELETE
+            'X-CSRFToken': FINAL_CSRF_TOKEN,
+        };
+
+        const config = {
+            method: method,
+            headers: headers,
+            body: data ? JSON.stringify(data) : null,
+        };
+
+        try {
+            const response = await fetch(url, config);
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorData = { message: errorText };
+                try {
+                    errorData = JSON.parse(errorText);
+                } catch (e) {
+                    // Fallback to status text
+                    errorData.message = `HTTP Error ${response.status}: ${response.statusText}`;
+                }
+
+                // Specific message for 403 Forbidden
+                if (response.status === 403) {
+                     throw new Error(`403 Forbidden. Check your CSRF token.`);
+                }
+
+                throw new Error(errorData.error || errorData.message || 'API Request Failed');
+            }
+            if (response.status === 204) return {}; // Handle No Content
+            return response.json();
+        } catch (error) {
+            console.error(`Fetch error on ${url}:`, error.message);
+            showToast(`Error: ${error.message}`, 'error');
+            throw error;
+        }
+    }
+
+    /** Display dynamic toast notifications */
+    function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toast-container');
+        const colorMap = {
+            'success': 'bg-green-500',
+            'error': 'bg-red-500',
+            'info': 'bg-indigo-500',
+            'warning': 'bg-yellow-500'
+        };
+        const toast = document.createElement('div');
+        toast.className = `p-4 text-white rounded-xl shadow-lg transition-opacity duration-300 ease-in-out transform translate-y-0 opacity-100 ${colorMap[type] || colorMap['info']}`;
+        toast.textContent = message;
+
+        toastContainer.appendChild(toast);
+
+        // Auto-hide after 4 seconds
+        setTimeout(() => {
+            toast.classList.remove('opacity-100', 'translate-y-0');
+            toast.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => toast.remove(), 300); // Remove after fade out
+        }, 4000);
+    }
+
+
+    function setupDropdown(buttonId, dropdownId) {
+        const btn = document.getElementById(buttonId);
+        const dropdown = document.getElementById(dropdownId);
+
+        if (btn && dropdown) {
+            const toggle = (show = null) => {
+                const isVisible = dropdown.classList.contains('opacity-100');
+                show = (show === null) ? !isVisible : show;
+
+                if (!show) {
+                    dropdown.classList.remove('scale-100', 'opacity-100');
+                    dropdown.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => {
+                        dropdown.classList.add('hidden');
+                    }, 100);
+                } else {
+                    dropdown.classList.remove('hidden');
+                    void dropdown.offsetWidth;
+                    dropdown.classList.remove('scale-95', 'opacity-0');
+                    dropdown.classList.add('scale-100', 'opacity-100');
+                }
+            };
+
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggle();
+            });
+
+            window.addEventListener('click', (e) => {
+                if (dropdown.classList.contains('opacity-100') && !dropdown.contains(e.target) && e.target !== btn) {
+                    toggle(false);
+                }
+            });
+        }
+    }
+
+
+    // --- 🗣️ 1. AI Assistant Logic ---
+    const chatWindow = document.getElementById('chat-window');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const AI_URL = "/api/ai/plan/";
+
+    /** Scrolls the chat window to the latest message. */
+    function scrollToBottom() {
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    /** Creates and appends a message bubble to the chat window. */
+    function addMessage(text, role, isAnimated = true) {
+        const bubble = document.createElement('div');
+        const roleClass = role === 'user'
+            ? 'bg-indigo-500 text-white rounded-t-xl rounded-br-xl ml-auto'
+            : 'bg-gray-200 text-gray-800 rounded-t-xl rounded-bl-xl mr-auto';
+
+        bubble.className = `p-4 shadow-md max-w-[85%] mb-3 ${roleClass} ${isAnimated ? 'message-enter' : ''}`;
+        bubble.setAttribute('data-role', role);
+        bubble.innerHTML = `<p class="text-sm">${text}</p>`;
+
+        chatWindow.appendChild(bubble);
+
+        if (isAnimated) {
+            requestAnimationFrame(() => {
+                bubble.classList.remove('message-enter');
+                bubble.classList.add('message-enter-active');
+            });
+        }
+        scrollToBottom();
+    }
+
+    /** Handles the AI chat submission. */
+    async function handleChat() {
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        // 1. Display user message
+        addMessage(message, 'user');
+        userInput.value = '';
+        sendBtn.disabled = true;
+
+        // 2. Display a loading message from AI
+        addMessage("...", 'ai', false);
+        const loadingBubble = chatWindow.lastChild;
+
+        try {
+            // 3. Send message to Django API
+            const response = await apiFetch(AI_URL, 'POST', { message: message });
+
+            // 4. Update the loading message with the final AI response
+            // FIX: Use specific error from apiFetch instead of generic text.
+            loadingBubble.innerHTML = `<p class="text-sm">${response.response}</p>`;
+            loadingBubble.classList.remove('bg-gray-200');
+            loadingBubble.classList.add('bg-indigo-100/70'); // Match initial AI style
+
+        } catch (error) {
+            // FIX: Show the specific error message provided by apiFetch
+            loadingBubble.innerHTML = `<p class="text-sm text-red-600">${error.message}</p>`;
+        } finally {
+            sendBtn.disabled = false;
+            scrollToBottom();
+        }
+    }
+
+    sendBtn.addEventListener('click', handleChat);
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleChat();
+    });
+
+    // --- ✅ 3. Task Tracker Logic ---
+const taskListContainer = document.getElementById('task-list-container');
+const taskStatus = document.getElementById('task-list-status');
+const addTaskBtn = document.getElementById('add-task-btn');
+const newTaskTitleInput = document.getElementById('new-task-title');
+const newTaskDateInput = document.getElementById('new-task-due-date');
+
+const TASK_URLS = {
+    add: "/api/tasks/add/",
+    update: (id) => `/api/tasks/${id}/update/`,
+    delete: (id) => `/api/tasks/${id}/delete/`,
+};
+
+// ✅ Local storage-based task tracker (no DB dependency)
+let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+
+// 🔔 Request browser notification permission once
+if (Notification && Notification.permission !== "granted") {
+    Notification.requestPermission();
+}
+
+// Helper — Save tasks to localStorage
+function saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+// Helper — Generate unique task ID
+function generateId() {
+    return "task-" + Date.now();
+}
+
+// Helper — Create and render a single task element
+function renderTask(task) {
+    const taskEl = document.createElement("div");
+    taskEl.className =
+        "task-item flex items-center p-3 bg-white rounded-xl hover:bg-gray-50 transition border border-gray-100";
+    taskEl.dataset.id = task.id;
+
+    let statusColor = "blue-500";
+    let dueText = "";
+    if (task.is_completed) {
+        statusColor = "green-500";
+    } else if (task.due_date) {
+        const dueDate = new Date(task.due_date);
+        const now = new Date();
+        if (dueDate < now) {
+            statusColor = "red-500";
+            dueText = `<span class="text-xs font-semibold px-2 py-0.5 rounded-full text-red-700 bg-red-100 ml-2">OVERDUE</span>`;
+        } else {
+            // FIX: Changed to a more compact date format for display
+            dueText = `<span class="text-xs font-medium text-gray-500 ml-2">${dueDate.toLocaleString(undefined, {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })}</span>`;
+        }
+    }
+
+    taskEl.innerHTML = `
+        <input type="checkbox" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 transition cursor-pointer" ${task.is_completed ? "checked" : ""}>
+        <label class="flex-grow ml-3 text-sm font-medium ${task.is_completed ? "line-through text-gray-500" : "text-gray-900"}">${task.title}</label>
+        ${dueText}
+        <button class="delete-task-btn p-1 ml-4 text-gray-400 hover:text-red-500 transition" aria-label="Delete Task">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+        </button>
+    `;
+
+    // Checkbox toggle
+    const checkbox = taskEl.querySelector("input[type=checkbox]");
+    checkbox.addEventListener("change", () => {
+        task.is_completed = checkbox.checked;
+        saveTasks();
+        updateTaskList();
+    });
+
+    // Delete button
+    taskEl.querySelector(".delete-task-btn").addEventListener("click", () => {
+        tasks = tasks.filter((t) => t.id !== task.id);
+        saveTasks();
+        updateTaskList();
+    });
+
+    return taskEl;
+}
+
+// Helper — Update full task list display
+function updateTaskList() {
+    taskListContainer.innerHTML = "";
+    if (tasks.length === 0) {
+        taskListContainer.innerHTML = '<div class="text-gray-500 text-center p-4">No tasks yet — add one below!</div>';
+        return;
+    }
+
+    // Sort by completion and date
+    tasks.sort((a, b) => {
+        if (a.is_completed !== b.is_completed) return a.is_completed ? 1 : -1;
+        return new Date(a.due_date || 0) - new Date(b.due_date || 0);
+    });
+
+    tasks.forEach((task) => {
+        taskListContainer.appendChild(renderTask(task));
+    });
+}
+
+// ✅ Add new task handler
+addTaskBtn.addEventListener("click", () => {
+    const title = newTaskTitleInput.value.trim();
+    const dueDate = newTaskDateInput.value;
+
+    if (!title) {
+        showToast("Please enter a task title!", "error");
+        return;
+    }
+
+    const newTask = {
+        id: generateId(),
+        title,
+        due_date: dueDate || null,
+        is_completed: false,
+    };
+
+    tasks.push(newTask);
+    saveTasks();
+    updateTaskList();
+
+    newTaskTitleInput.value = "";
+    newTaskDateInput.value = "";
+
+    showToast("✅ Task added successfully!", "success");
+});
+
+// 🔔 Check due dates every 30 seconds and notify
+setInterval(() => {
+    const now = new Date();
+    tasks.forEach((task) => {
+        if (!task.is_completed && task.due_date) {
+            const dueDate = new Date(task.due_date);
+            const diff = dueDate - now;
+
+            // Trigger exactly when due or within 30s past
+            if (diff <= 0 && diff > -30000 && !task.notified) {
+                task.notified = true; // Prevent repeat
+                saveTasks();
+
+                if (Notification.permission === "granted") {
+                    new Notification("⏰ Task Due!", {
+                        body: `${task.title} is due now.`,
+                        icon: "https://placehold.co/48x48/ff0080/ffffff?text=🕒",
+                    });
+                }
+                showToast(`⏰ Task Due: ${task.title}`, "warning");
+            }
+        }
+    });
+}, 30000);
+
+
+// Placeholder for Django context loading
+function loadInitialTasks() {
+    updateTaskList();
+}
+
+    // --- 💭 2. Mood Tracker Logic ---
+    const moodSelectorContainer = document.querySelector('.mood-selector');
+    const logMoodBtn = document.getElementById('log-mood-btn');
+    const moodEmojiDisplay = document.getElementById('mood-emoji');
+    const moodStatus = document.getElementById('mood-status');
+    const aiMoodSuggestion = document.getElementById('ai-mood-suggestion');
+    const moodHistoryContainer = document.getElementById('mood-history-container');
+    const moodHistoryStatus = document.getElementById('mood-history-status');
+
+    let selectedMoodCode = null;
+
+    const MOOD_CHOICES = [
+        { code: 'joy', display: 'Joyful', emoji: '😊', color: 'yellow-500' },
+        { code: 'calm', display: 'Calm', emoji: '😌', color: 'green-500' },
+        { code: 'neutral', display: 'Neutral', emoji: '😐', color: 'blue-300' },
+        { code: 'tired', display: 'Tired', emoji: '😴', color: 'gray-500' },
+        { code: 'stressed', display: 'Stressed', emoji: '😥', color: 'red-500' },
+        { code: 'sad', display: 'Sad', emoji: '😞', color: 'indigo-500' },
+    ];
+
+
+    const MOOD_URLS = {
+    save: "/api/mood/save/",
+    data: "/api/mood/save/" // Actual GET endpoint to fetch latest data
+};
+
+// ... inside the <script> tag ...
+
+// /** Fetches and displays the latest mood data. */
+async function loadMoodData() {
+    try {
+        // Fetch the list of latest moods from your Django backend
+        const data = await apiFetch(MOOD_URLS.data);
+
+        const latestEntry = data[0] || null; // Get the most recent entry
+
+        const frontendData = {
+            latest_mood: latestEntry ? {
+                mood_code: latestEntry.mood,
+                mood_display: MOOD_CHOICES.find(m => m.code === latestEntry.mood)?.display || latestEntry.mood
+            } : null,
+            ai_suggestion: latestEntry?.ai_suggestion || 'Log your first mood to get an AI suggestion!',
+            history: data.map(entry => ({
+                mood_code: entry.mood,
+                mood_display: MOOD_CHOICES.find(m => m.code === entry.mood)?.display || entry.mood,
+                logged_at: entry.logged_at_display, // Use the display field from the serializer
+            }))
+        };
+
+        renderMoodData(frontendData);
+
+    } catch (error) {
+        console.error('Failed to load mood data:', error);
+        showToast('Failed to load mood history from server.', 'error');
+        // Fallback to dummy data if fetching fails
+        renderMoodData({ latest_mood: null, ai_suggestion: 'Server is down. Check connection.', history: [] });
+    }
+}
+
+
+    /** Initializes the mood selection buttons. */
+    function setupMoodSelector() {
+        moodSelectorContainer.innerHTML = '';
+        MOOD_CHOICES.forEach(mood => {
+            const button = document.createElement('button');
+            button.className = `p-3 rounded-xl hover:bg-gray-100 transition text-2xl border-2 border-transparent`;
+            button.setAttribute('data-mood-code', mood.code);
+            button.title = mood.display;
+            button.textContent = mood.emoji;
+
+            button.addEventListener('click', () => {
+                selectMood(mood.code);
+            });
+            moodSelectorContainer.appendChild(button);
+        });
+    }
+
+    /** Handles the visual selection of a mood. */
+    function selectMood(code) {
+        selectedMoodCode = code;
+        moodSelectorContainer.querySelectorAll('button').forEach(btn => {
+            if (btn.getAttribute('data-mood-code') === code) {
+                btn.classList.add('bg-indigo-50', 'border-indigo-500');
+                btn.classList.remove('hover:bg-gray-100');
+            } else {
+                btn.classList.remove('bg-indigo-50', 'border-indigo-500');
+                btn.classList.add('hover:bg-gray-100');
+            }
+        });
+        logMoodBtn.disabled = false;
+    }
+
+    /** Renders the latest mood data to the main display and history. */
+    function renderMoodData(data) {
+        // 1. Update Main Display
+        const latest = data.latest_mood;
+        if (latest) {
+            const mood = MOOD_CHOICES.find(m => m.code === latest.mood_code) || { emoji: '?', display: 'Unknown', color: 'gray-500' };
+            moodEmojiDisplay.textContent = mood.emoji;
+            moodEmojiDisplay.className = `text-6xl mb-3 p-3 rounded-full transition-transform duration-300 transform hover:scale-105 bg-${mood.color.replace('-500', '-50')}`;
+            moodStatus.textContent = `Current Mood: ${mood.display}`;
+        } else {
+             moodEmojiDisplay.textContent = '😐';
+             moodEmojiDisplay.className = `text-6xl mb-3 p-3 rounded-full transition-transform duration-300 transform hover:scale-105 bg-gray-50`;
+             moodStatus.textContent = `Log your first mood!`;
+        }
+
+        // 2. Update AI Suggestion
+        aiMoodSuggestion.innerHTML = `<span class="font-semibold">AI Suggestion:</span> ${data.ai_suggestion || 'The AI will provide feedback here after you log your mood.'}`;
+
+        // 3. Update History
+        moodHistoryContainer.innerHTML = '';
+        if (!data.history || data.history.length === 0) {
+            moodHistoryContainer.innerHTML = moodHistoryStatus.outerHTML;
+        } else {
+            data.history.forEach(entry => {
+                const mood = MOOD_CHOICES.find(m => m.code === entry.mood_code);
+                const color = mood ? mood.color : 'gray-500';
+                const historyItem = document.createElement('div');
+                const baseColor = color.split('-')[0];
+                historyItem.className = `flex items-center justify-between p-2 rounded-lg bg-gray-50 border-l-4 border-l-${baseColor}-500`;
+                historyItem.innerHTML = `
+                    <span class="font-medium text-gray-700">${entry.mood_display}</span>
+                    <span class="text-xs text-gray-500">${entry.logged_at}</span>
+                `;
+                moodHistoryContainer.appendChild(historyItem);
+            });
+        }
+    }
+
+    /** Fetches and displays the latest mood data. */
+    async function loadMoodData() {
+        try {
+            const dummyData = {
+                latest_mood: null,
+                ai_suggestion: '',
+                history: [
+                    { mood_code: 'calm', mood_display: 'Calm', logged_at: '2 hours ago' },
+                    { mood_code: 'joy', mood_display: 'Joyful', logged_at: 'Yesterday' }
+                ]
+            };
+            // In a real app, you would fetch:
+            // const data = await apiFetch(MOOD_URLS.data);
+            renderMoodData(dummyData);
+        } catch (error) {
+            console.error('Failed to load mood data:', error);
+            showToast('Failed to load mood history.', 'error');
+        }
+    }
+
+    /** Handles saving a mood entry. */
+    async function handleLogMood() {
+        if (!selectedMoodCode) {
+            showToast('Please select a mood before logging.', 'error');
+            return;
+        }
+
+        logMoodBtn.disabled = true;
+
+        try {
+            // FIX: Use apiFetch to send data and receive AI suggestion
+            const aiResponse = await apiFetch(MOOD_URLS.save, 'POST', {
+                mood: selectedMoodCode,
+                notes: ''
+            });
+
+            const selectedMood = MOOD_CHOICES.find(m => m.code === selectedMoodCode);
+            const selectedMoodDisplay = selectedMood?.display || 'Mood';
+
+            // Update the display with the new data from the API response
+            renderMoodData({
+                latest_mood: {
+                    mood_code: aiResponse.mood,
+                    mood_display: selectedMoodDisplay
+                },
+                ai_suggestion: aiResponse.ai_suggestion,
+                // NOTE: We don't update history here because loadMoodData uses dummy history
+                history: [
+                    { mood_code: aiResponse.mood, mood_display: selectedMoodDisplay, logged_at: 'Just now' },
+                    ...(MOOD_CHOICES.history || [])
+                ]
+            });
+
+            showToast(`Mood logged: ${selectedMoodDisplay}! AI feedback received.`, 'success');
+
+            // Reset selector
+            selectedMoodCode = null;
+            setupMoodSelector();
+            logMoodBtn.disabled = true;
+
+        } catch (error) {
+            console.error(error);
+            showToast(`Failed to log mood: ${error.message}`, 'error');
+        } finally {
+            logMoodBtn.disabled = false;
+        }
+    }
+
+    logMoodBtn.addEventListener('click', handleLogMood);
+
+    // --- Initial Setup and Permissions ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Setup Profile Dropdown
+        setupDropdown('profile-btn', 'auth-dropdown');
+
+        // Load Task data from Local Storage
+        loadInitialTasks();
+
+        // Setup Mood Tracker
+        setupMoodSelector();
+        loadMoodData();
+        logMoodBtn.disabled = true; // Disabled until a mood is selected
+
+        // Request Notification Permission for due tasks
+        if ('Notification' in window) {
+            if (Notification.permission !== "granted") {
+                 Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                         showToast('Notifications enabled for task alerts!', 'success');
+                    } else {
+                         console.warn("Notification permission denied.");
+                    }
+                });
+            }
+        }
+    });
+
+</script>
+</body>
+</html>
