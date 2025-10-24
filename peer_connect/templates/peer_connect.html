@@ -1,0 +1,200 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peer Connect | Study Groups</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+          :root{
+            --bg-900: #071028;
+            --bg-800: #0b1530;
+            --card-900: rgba(255,255,255,0.03); /* Glass background */
+            --glass-700: rgba(255,255,255,0.03);
+            --accent: #6366f1; /* Indigo 500 */
+            --muted: #6366f1;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Full viewport gradient background from dashboard */
+            background: linear-gradient(180deg, #031029 0%, #06132a 45%, #041024 100%);
+            color: #e6eef8; /* Set default text color to light */
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 24px; /* Padding for content while body scrolls */
+            display: block; /* Removed centering from body */
+            box-sizing: border-box;
+        }
+        .card-shadow {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+    </style>
+</head>
+
+<body class="flex flex-col items-center">
+
+<div class="max-w-4xl w-full mx-auto">
+    <header class="flex justify-between items-center mb-10">
+        <h1 class="text-4xl font-extrabold text-gray-800 tracking-tight">Peer Connect</h1>
+        <div class="flex items-center space-x-4">
+            <a href="{% url 'index' %}" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition">
+                Go Back
+            </a>
+            <button id="open-modal-btn" class="flex items-center space-x-2 px-4 py-2 bg-emerald-500 text-white font-semibold rounded-full hover:bg-emerald-600 transition duration-300 shadow-md">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span>Create Group</span>
+            </button>
+            <span class="text-gray-600 font-medium hidden sm:inline">Hello, {{ request.user.username }}</span>
+        </div>
+    </header>
+
+    {% if messages %}
+    <div class="mb-6 space-y-3">
+        {% for message in messages %}
+        <div class="p-4 rounded-xl text-sm font-medium {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %}" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <section class="mb-12">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">My Study Groups ({{ my_groups|length }})</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for group in my_groups %}
+            <div class="bg-white p-6 rounded-xl card-shadow flex flex-col justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-indigo-600 mb-2 truncate">{{ group.name }}</h3>
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ group.description }}</p>
+                </div>
+                <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+                    <span class="text-xs font-medium text-gray-500">{{ group.member_count }} Members</span>
+                    <a href="{% url 'pc:chat_room' group.id %}" class="px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition duration-200">
+                        Chat
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <p class="col-span-full text-center text-gray-500 py-8 border border-dashed border-gray-300 rounded-xl">You haven't joined any groups yet. Explore available groups below or create a new one!</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section>
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Available Groups ({{ other_groups|length }})</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for group in other_groups %}
+            <div class="bg-white p-6 rounded-xl card-shadow flex flex-col justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-teal-600 mb-2 truncate">{{ group.name }}</h3>
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ group.description }}</p>
+                </div>
+                <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+                    <span class="text-xs font-medium text-gray-500">{{ group.member_count }} Members</span>
+                    <form method="POST" action="{% url 'pc:join_group' group.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="px-4 py-2 text-sm bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition duration-200">
+                            Join
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% empty %}
+            <p class="col-span-full text-center text-gray-500 py-8 border border-dashed border-gray-300 rounded-xl">No other study groups are currently available to join.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+</div>
+
+<div id="create-group-modal" class="{% if form.errors %}block{% else %}hidden{% endif %} fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+    <div class="bg-white rounded-2xl p-8 w-full max-w-lg card-shadow">
+        <div class="flex justify-between items-center mb-6 border-b pb-3">
+            <h2 class="text-2xl font-bold text-gray-800">Create New Group</h2>
+            <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="space-y-4">
+                <div>
+                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Group Name <span class="text-red-500">*</span></label>
+                    <input type="text"
+                           name="{{ form.name.name }}"
+                           id="{{ form.name.id_for_label }}"
+                           value="{{ form.name.value|default_if_none:'' }}"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                           placeholder="e.g., Python Study Group"
+                           required>
+                    {% for error in form.name.errors %}
+                        <p class="text-red-500 text-xs italic mt-1 font-semibold">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div>
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea name="{{ form.description.name }}"
+                              id="{{ form.description.id_for_label }}"
+                              rows="3"
+                              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder="Briefly describe the group's focus (optional).">{{ form.description.value|default_if_none:'' }}</textarea>
+                    {% for error in form.description.errors %}
+                        <p class="text-red-500 text-xs italic mt-1 font-semibold">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-4">
+                     {% for error in form.non_field_errors %}
+                        <div class="p-3 bg-red-100 text-red-700 rounded-lg text-sm font-semibold">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+            </div>
+
+            <button type="submit" class="w-full mt-6 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-emerald-700 transition duration-300">
+                Create Group
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById('create-group-modal');
+        const openBtn = document.getElementById('open-modal-btn');
+        const closeBtn = document.getElementById('close-modal-btn');
+
+        const showModal = () => {
+            modal.classList.remove('hidden');
+        };
+
+        const closeModal = () => {
+            modal.classList.add('hidden');
+        };
+
+        openBtn.addEventListener('click', showModal);
+        closeBtn.addEventListener('click', closeModal);
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+    });
+</script>
+</body>
+</html>
